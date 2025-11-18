@@ -37,13 +37,34 @@ echo sprintf(
     $jade
 );
 
+//Création d'un nouveau joueur
+$Louis = new Player(500, "Pavard");
+
 exit(0);
 
 
 class Player
 {
     public int $level;
+    protected $nom;
+    public function __construct(int $level, string $nom = ''){
+
+        $this->level = $level;
+        $this->nom = $nom;
+    }
+
+    public function getNom(): string {
+        return $this->nom;
+
+    }
+
+    public function setNom(string $nom){
+        $this->nom = $nom;
+    }
+
 }
+
+
 
 class Encounter
 {
