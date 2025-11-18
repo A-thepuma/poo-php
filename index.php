@@ -38,3 +38,18 @@ echo sprintf(
 );
 
 exit(0);
+
+
+class Player {
+    public int $level;
+}
+
+class Encounter{
+
+    public function probabilityAgainst()    {
+    }
+
+    public function setNewLevel():void {
+
+    }
+}
