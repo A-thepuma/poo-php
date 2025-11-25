@@ -9,12 +9,12 @@
  * file that was distributed with this source code.
  */
 
-// declare(strict_types=1);
+declare(strict_types=1);
 
 class Lobby
 {
     /** @var array<QueuingPlayer> */
-    public  $queuingPlayers = [];
+    public $queuingPlayers = [];
 
     public function findOponents(QueuingPlayer $player)
     {
@@ -43,8 +43,8 @@ class Lobby
 
 abstract class Player extends User
 {
-    protected string $name;
-    protected float $ratio;
+    protected $name;
+    protected $ratio;
 
     public function __construct(string $name, float $ratio = 400.0)
     {
@@ -76,7 +76,7 @@ abstract class Player extends User
 
 class QueuingPlayer extends Player
 {
-    private int $range = 1;
+    private $range = 1;
 
     public function __construct(string $name, float $ratio = 400.0)
     {
@@ -100,32 +100,42 @@ class QueuingPlayer extends Player
 }
 
 
-abstract class User {
-    public const STATUS_ACTIVE = 'active'; public const STATUS_INACTIVE = 'inactive'; 
-    public function __construct(public string $email, public string $status = self::STATUS_ACTIVE) {
+abstract class User
+{
+    const STATUS_ACTIVE = 'active';
+    const STATUS_INACTIVE = 'inactive';
 
-     } 
-     public function setStatus(string $status): void { 
-        assert( 
-            in_array($status, [self::STATUS_ACTIVE, self::STATUS_INACTIVE]), 
-            sprintf( 
-                'Le status %s n\'est pas valide. Les status possibles sont : %s', 
-                $status, [self::STATUS_ACTIVE, self::STATUS_INACTIVE]) 
-            ); 
-        $this->status = $status; 
-    } 
-    public function getStatus(): string 
-    { 
+    public $email;
+    public $status;
+    public function __construct(string $email, string $status = self::STATUS_ACTIVE)
+    {
+        $this->email = $email;
+        $this->status = $status;
+    }
+    public function setStatus(string $status): void
+    {
+        assert(
+            in_array($status, [self::STATUS_ACTIVE, self::STATUS_INACTIVE]),
+            sprintf(
+                'Le status %s n\'est pas valide. Les status possibles sont : %s',
+                $status,
+                [self::STATUS_ACTIVE, self::STATUS_INACTIVE]
+            )
+        );
+        $this->status = $status;
+    }
+    public function getStatus(): string
+    {
         return $this->status;
     }
 
-    abstract public function getUsername():string;
+    abstract public function getUsername(): string;
 
 }
 
 final class Admin extends User
 {
-    public array $roles;
+    public $roles;
 
     public function __construct(string $email, string $status = self::STATUS_ACTIVE, array $roles = [])
     {
@@ -135,9 +145,33 @@ final class Admin extends User
 
     public function getUsername(): string
     {
-        return $this->email; 
+        return $this->email;
     }
 }
+
+
+class BlitzPlayer extends Player
+{
+    public function __construct(string $name, float $ratio = 1200.0)
+    {
+        parent::__construct($name, $ratio);
+    }
+
+    public function updateRatioAgainst(Player $player, int $result): void
+    {
+        $this->ratio += 32 * 4 * ($result - $this->probabilityAgainst($player));
+    }
+
+    private function probabilityAgainst(Player $player): float
+    {
+        return 1 / (1 + (10 ** (($player->getRatio() - $this->getRatio()) / 400)));
+    }
+    public function getUsername(): string
+    {
+        return $this->getName();
+    }
+}
+
 
 
 $admin = new Admin('trompete@guy.com', 'Ibrahim Maalouf');
@@ -145,7 +179,6 @@ var_dump($admin);
 
 $greg = new QueuingPlayer('greg', 400);
 $jade = new QueuingPlayer('jade', 476);
-
 
 $lobby = new Lobby();
 $lobby->addPlayers($greg, $jade);
