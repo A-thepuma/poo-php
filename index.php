@@ -11,178 +11,37 @@
 
 declare(strict_types=1);
 
-class Lobby
-{
-    /** @var array<QueuingPlayer> */
-    public $queuingPlayers = [];
+spl_autoload_register(static function ($fqcn): void {
+    $path = sprintf('%s.php', str_replace(['App\\Domain', '\\'], ['src', '/'], $fqcn));
+    require_once $path;
+});
 
-    public function findOponents(QueuingPlayer $player)
-    {
-        $minLevel = round($player->getRatio() / 100);
-        $maxLevel = $minLevel + $player->getRange();
+use App\Domain\MatchMaker\Encounter\Score;
+use App\Domain\MatchMaker\Lobby;
+use App\Domain\MatchMaker\Player\Player;
 
-        return array_filter($this->queuingPlayers, static function (QueuingPlayer $potentialOponent) use ($minLevel, $maxLevel, $player) {
-            $playerLevel = round($potentialOponent->getRatio() / 100);
-
-            return $player !== $potentialOponent && ($minLevel <= $playerLevel) && ($playerLevel <= $maxLevel);
-        });
-    }
-
-    public function addPlayer(Player $player)
-    {
-        $this->queuingPlayers[] = new QueuingPlayer($player->getName(), $player->getRatio());
-    }
-
-    public function addPlayers(Player ...$players)
-    {
-        foreach ($players as $player) {
-            $this->addPlayer($player);
-        }
-    }
-}
-
-abstract class Player extends User
-{
-    protected $name;
-    protected $ratio;
-
-    public function __construct(string $name, float $ratio = 400.0)
-    {
-        $this->name = $name;
-        $this->ratio = $ratio;
-    }
-
-    public function getName(): string
-    {
-        return $this->name;
-    }
-
-    private function probabilityAgainst(self $player): float
-    {
-        return 1 / (1 + (10 ** (($player->getRatio() - $this->getRatio()) / 400)));
-    }
-
-    public function updateRatioAgainst(self $player, int $result): void
-    {
-        $this->ratio += 32 * ($result - $this->probabilityAgainst($player));
-    }
-
-    public function getRatio(): float
-    {
-        return $this->ratio;
-    }
-
-}
-
-class QueuingPlayer extends Player
-{
-    private $range = 1;
-
-    public function __construct(string $name, float $ratio = 400.0)
-    {
-        parent::__construct($name, $ratio);
-    }
-
-    public function getRange(): int
-    {
-        return $this->range;
-    }
-
-    public function setRange(int $range): void
-    {
-        $this->range = $range;
-    }
-
-    public function getUsername(): string
-    {
-        return $this->getName();
-    }
-}
-
-
-abstract class User
-{
-    const STATUS_ACTIVE = 'active';
-    const STATUS_INACTIVE = 'inactive';
-
-    public $email;
-    public $status;
-    public function __construct(string $email, string $status = self::STATUS_ACTIVE)
-    {
-        $this->email = $email;
-        $this->status = $status;
-    }
-    public function setStatus(string $status): void
-    {
-        assert(
-            in_array($status, [self::STATUS_ACTIVE, self::STATUS_INACTIVE]),
-            sprintf(
-                'Le status %s n\'est pas valide. Les status possibles sont : %s',
-                $status,
-                [self::STATUS_ACTIVE, self::STATUS_INACTIVE]
-            )
-        );
-        $this->status = $status;
-    }
-    public function getStatus(): string
-    {
-        return $this->status;
-    }
-
-    abstract public function getUsername(): string;
-
-}
-
-final class Admin extends User
-{
-    public $roles;
-
-    public function __construct(string $email, string $status = self::STATUS_ACTIVE, array $roles = [])
-    {
-        parent::__construct($email, $status);
-        $this->roles = $roles;
-    }
-
-    public function getUsername(): string
-    {
-        return $this->email;
-    }
-}
-
-
-class BlitzPlayer extends Player
-{
-    public function __construct(string $name, float $ratio = 1200.0)
-    {
-        parent::__construct($name, $ratio);
-    }
-
-    public function updateRatioAgainst(Player $player, int $result): void
-    {
-        $this->ratio += 32 * 4 * ($result - $this->probabilityAgainst($player));
-    }
-
-    private function probabilityAgainst(Player $player): float
-    {
-        return 1 / (1 + (10 ** (($player->getRatio() - $this->getRatio()) / 400)));
-    }
-    public function getUsername(): string
-    {
-        return $this->getName();
-    }
-}
-
-
-
-$admin = new Admin('trompete@guy.com', 'Ibrahim Maalouf');
-var_dump($admin);
-
-$greg = new QueuingPlayer('greg', 400);
-$jade = new QueuingPlayer('jade', 476);
+$greg = new Player('greg');
+$chuckNorris = new Player('Chuck Norris', 3000);
 
 $lobby = new Lobby();
-$lobby->addPlayers($greg, $jade);
+$lobby->addPlayer($greg);
+$lobby->addPlayer($chuckNorris);
 
-var_dump($lobby->findOponents($lobby->queuingPlayers[0]));
+while (count($lobby->queuingPlayers)) {
+    $lobby->createEncounters();
+}
 
-exit(0);
+$encounter = end($lobby->encounters);
+
+// ces scores sont fictifs !
+$encounter->setScores(
+    new Score(score: 42, player: $greg),
+    new Score(score: 1, player: $chuckNorris)
+);
+
+var_dump($encounter);
+
+$encounter->updateRatios();
+
+var_dump($greg);
+var_dump($chuckNorris);
