@@ -11,8 +11,9 @@
 
 declare(strict_types=1);
 
-namespace App\MatchMaker\Player;
+namespace App\Domain\MatchMaker\Player;
 
+use App\Domain\MatchMaker\Player\PlayerInterface;
 abstract class AbstractPlayer implements PlayerInterface
 {
     public function __construct(public string $name = 'anonymous', public float $ratio = 400.0)

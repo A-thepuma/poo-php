@@ -15,8 +15,12 @@ namespace App\Domain\MatchMaker\Player;
 
 class Player implements PlayerInterface
 {
-    public function __construct(protected string $name, protected float $ratio = 400.0)
+    protected  $name;
+    protected  $ratio;
+    public function __construct( string $name,  float $ratio = 400.0)
     {
+        $this->name = $name;
+        $this->ratio = $ratio;
     }
 
     public function getName(): string

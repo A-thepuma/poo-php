@@ -11,7 +11,7 @@
 
 declare(strict_types=1);
 
-spl_autoload_register(static function ($fqcn): void {
+spl_autoload_register(static function ($fqcn) {
     $path = sprintf('%s.php', str_replace(['App\\Domain', '\\'], ['src', '/'], $fqcn));
     require_once $path;
 });
@@ -35,8 +35,8 @@ $encounter = end($lobby->encounters);
 
 // ces scores sont fictifs !
 $encounter->setScores(
-    new Score(score: 42, player: $greg),
-    new Score(score: 1, player: $chuckNorris)
+    new Score($greg, 42), 
+    new Score($chuckNorris, 1) 
 );
 
 var_dump($encounter);
