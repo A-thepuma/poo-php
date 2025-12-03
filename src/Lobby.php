@@ -11,7 +11,7 @@
 
 declare(strict_types=1);
 
-namespace App\MatchMaker;
+namespace App\Domain\MatchMaker;
 use App\Domain\MatchMaker\PlayerNotFoundInLobbyException;
 
 use App\Domain\MatchMaker\Encounter\Encounter;
